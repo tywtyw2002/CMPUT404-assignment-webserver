@@ -69,6 +69,12 @@ class HTTPError(Exception):
 
 class MyWebServer(SocketServer.BaseRequestHandler):
 
+    def redirect(self, path):
+        response = "HTTP/1.1 %d %s\r\n" % (301, HTTP_CODE[301][0])
+        response += "Location: %s\r\n\r\n" % path
+
+        self.request.sendall(response)
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
         print "Got a request of: %s\n" % self.data
