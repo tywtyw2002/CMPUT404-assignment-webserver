@@ -41,6 +41,32 @@ HTTP_CODE = {
 }
 
 
+ERROR_TEMPLATE = """\
+<head>
+<title>{code} {msg}</title>
+</head>
+<body>
+<h1>{code} {msg}</h1>
+<p>{reason}.
+</body>
+"""
+
+
+class HTTPError(Exception):
+
+    def __init__(self, status_code=500):
+        self.status_info = HTTP_CODE[status_code]
+        self.status_code = status_code
+        self.status_msg = self.status_info[0]
+        self.status_reason = self.status_info[1]
+
+    @property
+    def html_content(self):
+        return ERROR_TEMPLATE.format(code=self.status_code,
+                                     msg=self.status_msg,
+                                     reason=self.status_reason)
+
+
 class MyWebServer(SocketServer.BaseRequestHandler):
 
     def handle(self):
