@@ -25,6 +25,21 @@ import SocketServer
 
 # try: curl -v -X GET http://127.0.0.1:8080/
 
+MIME_TYPE = {
+    "CSS": "text/css",
+    "HTML": "text/html"
+}
+
+HTTP_CODE = {
+    200: ('OK', 'Request fulfilled, document follows'),
+    301: ('Moved Permanently', 'Object moved permanently -- see URI list'),
+    400: ('Bad Request', 'Bad request syntax or unsupported method'),
+    404: ('Not Found', 'Nothing matches the given URI'),
+    500: ('Internal Server Error', 'Server got itself in trouble'),
+    501: ('Not Implemented', 'Server does not support this operation'),
+    505: ('HTTP Version Not Supported', 'Cannot fulfill request')
+}
+
 
 class MyWebServer(SocketServer.BaseRequestHandler):
 
