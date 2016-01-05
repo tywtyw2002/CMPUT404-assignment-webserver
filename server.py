@@ -1,4 +1,5 @@
 import SocketServer
+import os
 
 # Copyright 2015 Tianyi Wu, Abram Hindle, Eddie Antonio Santos
 #
@@ -24,6 +25,8 @@ import SocketServer
 # run: python freetests.py
 
 # try: curl -v -X GET http://127.0.0.1:8080/
+
+HTML_PATH = 'www'
 
 MIME_TYPE = {
     "CSS": "text/css",
@@ -69,6 +72,32 @@ class HTTPError(Exception):
 
 class MyWebServer(SocketServer.BaseRequestHandler):
 
+    SUPPORTED_HTTP_VERSION = ('HTTP/1.0', 'HTTP/1.1')
+    SUPPORTED_METHODS = ("GET")
+
+    def get(self, path):
+        root_path = os.path.abspath(HTML_PATH)
+
+        file_path = root_path + path
+        absolute_path = os.path.abspath(file_path)
+
+        if not absolute_path.startswith(root_path):
+            raise HTTPError(404)
+
+        if not os.path.exists(absolute_path):
+            raise HTTPError(404)
+
+        if os.path.isdir(absolute_path):
+            if not file_path.endswith('/'):
+                self.redirect(path + '/')
+
+            absolute_path = os.path.join(absolute_path, 'index.html')
+
+        mime_type = MIME_TYPE.get(
+            absolute_path.split('.')[-1].upper(), MIME_TYPE['HTML'])
+        with open(absolute_path) as fp:
+            self.send_response(200, mime_type, fp.read())
+
     def redirect(self, path):
         response = "HTTP/1.1 %d %s\r\n" % (301, HTTP_CODE[301][0])
         response += "Location: %s\r\n\r\n" % path
@@ -88,10 +117,30 @@ class MyWebServer(SocketServer.BaseRequestHandler):
     def send_error(self, e):
         self.send_response(e.status_code, MIME_TYPE['HTML'], e.html_content)
 
+    def http_request(self, req):
+        req_args = req.splitlines()[0].split()
+
+        if len(req_args) != 3:
+            raise HTTPError(400)
+
+        req_method, path, http_version = req_args
+
+        if http_version.strip() not in self.SUPPORTED_HTTP_VERSION:
+            raise HTTPError(505)
+
+        if req_method not in self.SUPPORTED_METHODS:
+            raise HTTPError(405)
+
+        method = getattr(self, req_method.lower())
+        method(path)
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
-        print "Got a request of: %s\n" % self.data
-        self.request.sendall("OK")
+
+        try:
+            self.http_request(self.data)
+        except HTTPError as e:
+            self.send_error(e)
 
 
 if __name__ == "__main__":
