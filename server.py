@@ -75,6 +75,16 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
         self.request.sendall(response)
 
+    def send_response(self, code, mime_type, content=''):
+        response = "HTTP/1.1 %d %s \r\n" % (code, HTTP_CODE[code][0])
+        response += "Content-Length: %d \r\n" % len(content)
+        response += "Content-Type: %s \r\n" % mime_type
+        response += "Connection: close \r\n\r\n"
+        response += content
+        response += "\r\n"
+
+        self.request.sendall(response)
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
         print "Got a request of: %s\n" % self.data
