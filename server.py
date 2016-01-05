@@ -85,6 +85,9 @@ class MyWebServer(SocketServer.BaseRequestHandler):
 
         self.request.sendall(response)
 
+    def send_error(self, e):
+        self.send_response(e.status_code, MIME_TYPE['HTML'], e.html_content)
+
     def handle(self):
         self.data = self.request.recv(1024).strip()
         print "Got a request of: %s\n" % self.data
