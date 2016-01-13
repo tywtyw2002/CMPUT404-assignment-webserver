@@ -84,14 +84,14 @@ class MyWebServer(SocketServer.BaseRequestHandler):
         if not absolute_path.startswith(root_path):
             raise HTTPError(404)
 
-        if not os.path.exists(absolute_path):
-            raise HTTPError(404)
-
         if os.path.isdir(absolute_path):
             if not file_path.endswith('/'):
                 self.redirect(path + '/')
 
             absolute_path = os.path.join(absolute_path, 'index.html')
+
+        if not os.path.exists(absolute_path):
+            raise HTTPError(404)
 
         mime_type = MIME_TYPE.get(
             absolute_path.split('.')[-1].upper(), MIME_TYPE['HTML'])
